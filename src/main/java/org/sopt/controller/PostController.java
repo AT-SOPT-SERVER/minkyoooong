@@ -11,7 +11,11 @@ public class PostController {
     private final PostService postService = new PostService();
 
     public void createPost(final String title) {
-        postService.createPost(title);
+        try {
+            postService.createPost(title);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public List<Post> getAllPosts() {

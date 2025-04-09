@@ -12,7 +12,6 @@ public class PostService {
 
     public void createPost(String title) {
         Post post = new Post(postId++, title);
-
         postRepository.save(post);
     }
 
