@@ -28,4 +28,17 @@ public class PostService {
         return postRepository.delete(id);
     }
 
+    // 게시물 수정 -> service에서 처리.
+    // 게시물 수정은 단순히 수정 이외에 게시물을 조회하고, 예외 등등을 처리해야하므로 비즈니스 로직을 수행하는 service에서 처리.
+    public boolean updatePostTitle(int id, String newTitle) {
+        Post post = postRepository.findPostById(id);
+
+        if (post == null) {
+            return false;
+        }
+
+        post.updateTitle(newTitle);
+        return true;
+    }
+
 }

@@ -21,9 +21,7 @@ public class PostController {
     public Post getPostById(int id) {
         return postService.getPostById(id);
     }
-    public Boolean updatePostTitle(int id, String newTitle) {
-        return null;
-    }
+
 
     public boolean deletePostById(int id) {
         return postService.deletePostById(id);
@@ -31,5 +29,14 @@ public class PostController {
 
     public List<Post> searchPostsByKeyword(String keyword) {
         return null;
+    }
+
+    public Boolean updatePostTitle(int id, String newTitle) {
+        try {
+            return postService.updatePostTitle(id, newTitle);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
     }
 }
