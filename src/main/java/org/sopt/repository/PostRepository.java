@@ -47,4 +47,10 @@ public class PostRepository {
         }
         return false;
     }
+
+    // 가장 마지막 게시물을 가져오는 기능
+    public Post findLastPost() {
+        if (postList.isEmpty()) return null;
+        return postList.get(postList.size() - 1);
+    }
 }

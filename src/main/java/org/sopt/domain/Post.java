@@ -1,15 +1,19 @@
 package org.sopt.domain;
 
+import java.time.LocalDateTime;
+
 public class Post {
 
     private int id;
     private String title;
+    private final LocalDateTime createdAt;
 
     // 게시물 생성시 제목 공백 -> 생성자에 검증 로직 추가
     public Post(int id, String title) {
         validateTitle(title);
         this.id = id;
         this.title = title;
+        this.createdAt = LocalDateTime.now();
     }
 
     public int getId() {
@@ -18,6 +22,10 @@ public class Post {
 
     public String getTitle() {
         return this.title;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
     // 제목의 유효성 -> Post 객체 자체의 책임으로 domain에서 처리

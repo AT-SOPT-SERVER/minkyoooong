@@ -24,7 +24,7 @@ public class Main {
                     System.out.print("📌 제목을 입력해주세요: ");
                     String title = scanner.nextLine();
                     controller.createPost(title);
-                    System.out.println("✅ 게시글이 성공적으로 저장되었습니다!");
+                    // System.out.println("✅ 게시글이 성공적으로 저장되었습니다!"); // 이부분 controller의 createPost 로직으로 옮겼습니다.
                     break;
 
                 case "2":

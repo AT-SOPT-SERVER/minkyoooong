@@ -13,6 +13,7 @@ public class PostController {
     public void createPost(final String title) {
         try {
             postService.createPost(title);
+            System.out.println("✅ 게시글이 성공적으로 저장되었습니다!");
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
