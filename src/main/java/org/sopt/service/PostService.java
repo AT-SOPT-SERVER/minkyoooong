@@ -2,13 +2,13 @@ package org.sopt.service;
 
 import org.sopt.domain.Post;
 import org.sopt.repository.PostRepository;
+import org.sopt.utils.IdGenerator;
 
 import java.util.List;
 
 public class PostService {
 
     private final PostRepository postRepository = new PostRepository();
-    private int postId = 1;
 
     public void createPost(String title) {
 
@@ -17,7 +17,9 @@ public class PostService {
             throw new IllegalArgumentException("이미 존재하는 제목입니다.");
         }
 
-        Post post = new Post(postId++, title);
+        //유틸 클래스에서 id 값 받아오는 방식으로 수정
+        int id = IdGenerator.generateId();
+        Post post = new Post(id, title);
         postRepository.save(post);
     }
 
