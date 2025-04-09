@@ -70,9 +70,9 @@ public class Main {
                     int deleteId = Integer.parseInt(scanner.nextLine());
                     boolean deleted = controller.deletePostById(deleteId);
                     if (deleted) {
-                        System.out.println("🗑️ 게시글이 성공적으로 삭제되었습니다.");
+                        System.out.println("🗑️ 게시글이 성공적으로 삭제되었습니다. ");
                     } else {
-                        System.out.println("❌ 삭제할 게시글이 존재하지 않습니다.");
+                        System.out.println("❌ 삭제할 게시글이 존재하지 않습니다. ");
                     }
 
                     break;
