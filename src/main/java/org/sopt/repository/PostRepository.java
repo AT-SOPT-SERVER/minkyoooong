@@ -36,4 +36,15 @@ public class PostRepository {
         }
         return false;
     }
+
+    // 중복 검사 메서드 -> repository에 추가
+    // 데이터를 직접 다루는 책임은 Repository에 있으므로 이곳에 구현
+    public boolean existsByTitle(String title) {
+        for (Post post : postList) {
+            if (post.getTitle().equals(title)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
