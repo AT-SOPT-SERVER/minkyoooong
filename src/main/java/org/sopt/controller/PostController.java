@@ -33,7 +33,7 @@ public class PostController {
     }
 
     public List<Post> searchPostsByKeyword(String keyword) {
-        return null;
+        return postService.searchPostsByKeyword(keyword);
     }
 
     public Boolean updatePostTitle(int id, String newTitle) {
@@ -44,4 +44,5 @@ public class PostController {
             return false;
         }
     }
+
 }

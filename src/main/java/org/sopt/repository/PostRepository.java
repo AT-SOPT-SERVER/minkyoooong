@@ -53,4 +53,15 @@ public class PostRepository {
         if (postList.isEmpty()) return null;
         return postList.get(postList.size() - 1);
     }
+
+    // 게시물 키워드 검색 기능 -> repository에 추가
+    public List<Post> searchByKeyword(String keyword) {
+        List<Post> result = new ArrayList<>();
+        for (Post post : postList) {
+            if (post.getTitle().contains(keyword)) {
+                result.add(post);
+            }
+        }
+        return result;
+    }
 }
