@@ -74,6 +74,7 @@ public class Main {
                     } else {
                         System.out.println("❌ 삭제할 게시글이 존재하지 않습니다.");
                     }
+
                     break;
 
                 case "6":
