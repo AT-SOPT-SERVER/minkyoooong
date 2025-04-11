@@ -57,6 +57,14 @@ public class PostService {
             return false;
         }
 
+        // 현재 게시글을 제외하고 중복 제목 검사
+        List<Post> allPosts = postRepository.findAll();
+        for (Post p : allPosts) {
+            if (p.getId() != id && p.getTitle().equals(newTitle)) {
+                throw new IllegalArgumentException("이미 존재하는 제목입니다.");
+            }
+        }
+
         post.updateTitle(newTitle);
         return true;
     }
