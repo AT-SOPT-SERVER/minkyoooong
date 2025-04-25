@@ -1,77 +1,81 @@
 package org.sopt.service;
 
 import org.sopt.domain.Post;
+import org.sopt.dto.PostResponse;
+import org.sopt.global.CustomException;
+import org.sopt.global.ErrorCode;
 import org.sopt.repository.PostRepository;
-import org.sopt.utils.IdGenerator;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Service
 public class PostService {
 
-    private final PostRepository postRepository = new PostRepository();
+    private static final long POST_LIMIT_SECONDS = 180; // 3분 제한
 
-    public void createPost(String title) {
+    private final PostRepository postRepository;
 
-        // 중복 검사 로직 추가
+    public PostService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    public PostResponse createPost(String title) {
         if (postRepository.existsByTitle(title)) {
-            throw new IllegalArgumentException("이미 존재하는 제목입니다.");
+            throw new CustomException(ErrorCode.DUPLICATE_TITLE);
         }
 
-        // 게시물 작성 제한 시간 3분 -> service에 구현.
-        Post lastPost = postRepository.findLastPost();
-
-        if (lastPost != null) {
-            LocalDateTime now = LocalDateTime.now();
-            Duration duration = Duration.between(lastPost.getCreatedAt(), now);
-            if (duration.getSeconds() < 180) { // 제한 시간 3분
-                throw new IllegalArgumentException("직전 게시물 생성 기준으로 3분이 지나지 않아 게시물을 작성할 수 없습니다.");
+        List<Post> posts = postRepository.findAll();
+        if (!posts.isEmpty()) {
+            Post lastPost = posts.get(posts.size() - 1);
+            Duration duration = Duration.between(lastPost.getCreatedAt(), LocalDateTime.now());
+            if (duration.getSeconds() < POST_LIMIT_SECONDS) {
+                throw new CustomException(ErrorCode.POST_COOLDOWN);
             }
         }
 
-        // 유틸 클래스에서 id 값 받아오는 방식으로 수정
-        int id = IdGenerator.generateId();
-        Post post = new Post(id, title);
-        postRepository.save(post);
+        // 생성 완료 후 응답에서 생성된 post 정보를 돌려보내도록 하기 위해 response 리턴하도록
+        Post savedPost = postRepository.save(new Post(title));
+        return new PostResponse(savedPost.getId(), savedPost.getTitle());
     }
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public List<PostResponse> getAllPosts() {
+        return postRepository.findAll().stream()
+                .map(p -> new PostResponse(p.getId(), p.getTitle()))
+                .collect(Collectors.toList());
     }
 
-    public Post getPostById(int id) {
-        return postRepository.findPostById(id);
+    public PostResponse getPostById(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        return new PostResponse(post.getId(), post.getTitle());
     }
 
-    public boolean deletePostById(int id) {
-        return postRepository.delete(id);
-    }
-
-    // 게시물 수정 -> service에서 처리.
-    // 게시물 수정은 단순히 수정 이외에 게시물을 조회하고, 예외 등등을 처리해야하므로 비즈니스 로직을 수행하는 service에서 처리.
-    public boolean updatePostTitle(int id, String newTitle) {
-        Post post = postRepository.findPostById(id);
-
-        if (post == null) {
-            return false;
+    public void deletePostById(Long id) {
+        if (!postRepository.existsById(id)) {
+            throw new CustomException(ErrorCode.POST_NOT_FOUND);
         }
+        postRepository.deleteById(id);
+    }
 
-        // 현재 게시글을 제외하고 중복 제목 검사
-        List<Post> allPosts = postRepository.findAll();
-        for (Post p : allPosts) {
-            if (p.getId() != id && p.getTitle().equals(newTitle)) {
-                throw new IllegalArgumentException("이미 존재하는 제목입니다.");
-            }
+    public void updatePostTitle(Long id, String newTitle) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+
+        if (postRepository.existsByTitle(newTitle) && !post.getTitle().equals(newTitle)) {
+            throw new CustomException(ErrorCode.DUPLICATE_TITLE);
         }
 
         post.updateTitle(newTitle);
-        return true;
+        postRepository.save(post);
     }
 
-    public List<Post> searchPostsByKeyword(String keyword) {
-        return postRepository.searchByKeyword(keyword);
+    public List<PostResponse> searchPostsByKeyword(String keyword) {
+        return postRepository.findByTitleContaining(keyword).stream()
+                .map(p -> new PostResponse(p.getId(), p.getTitle()))
+                .collect(Collectors.toList());
     }
-
-
 }
