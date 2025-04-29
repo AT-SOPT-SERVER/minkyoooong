@@ -11,7 +11,6 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/post")
 public class PostController {
 
     private final PostService postService;
@@ -20,29 +19,29 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping
+    @PostMapping("/post")
     public ResponseEntity<ApiResponse<PostResponse>> createPost(@RequestBody PostRequest request) {
         PostResponse response = postService.createPost(request.title());
         return ResponseEntity.ok(ApiResponse.success("게시글이 성공적으로 작성되었습니다.", response));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/posts")
     public ResponseEntity<ApiResponse<List<PostResponse>>> getAllPosts() {
         return ResponseEntity.ok(ApiResponse.success("전체 게시글 조회 성공", postService.getAllPosts()));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/post/{id}")
     public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("게시글 조회 성공", postService.getPostById(id)));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> updatePost(@PathVariable Long id, @RequestBody PostRequest request) {
-        postService.updatePostTitle(id, request.title());
-        return ResponseEntity.ok(ApiResponse.success("게시글 수정 성공"));
+    @PatchMapping("/post/{id}")
+    public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id, @RequestBody PostRequest request) {
+        PostResponse updated = postService.updatePostTitle(id, request.title());
+        return ResponseEntity.ok(ApiResponse.success("게시글 수정 성공", updated));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/post/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long id) {
         postService.deletePostById(id);
         return ResponseEntity.ok(ApiResponse.success("게시글 삭제 성공"));
