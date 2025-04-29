@@ -6,6 +6,7 @@ import org.sopt.global.CustomException;
 import org.sopt.global.ErrorCode;
 import org.sopt.repository.PostRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
+    @Transactional
     public PostResponse createPost(String title) {
         if (postRepository.existsByTitle(title)) {
             throw new CustomException(ErrorCode.DUPLICATE_TITLE);
@@ -42,18 +44,21 @@ public class PostService {
         return new PostResponse(savedPost.getId(), savedPost.getTitle());
     }
 
+    @Transactional(readOnly = true)
     public List<PostResponse> getAllPosts() {
         return postRepository.findAll().stream()
                 .map(p -> new PostResponse(p.getId(), p.getTitle()))
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public PostResponse getPostById(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
         return new PostResponse(post.getId(), post.getTitle());
     }
 
+    @Transactional
     public void deletePostById(Long id) {
         if (!postRepository.existsById(id)) {
             throw new CustomException(ErrorCode.POST_NOT_FOUND);
@@ -61,7 +66,8 @@ public class PostService {
         postRepository.deleteById(id);
     }
 
-    public void updatePostTitle(Long id, String newTitle) {
+    @Transactional
+    public PostResponse updatePostTitle(Long id, String newTitle) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
 
@@ -70,9 +76,11 @@ public class PostService {
         }
 
         post.updateTitle(newTitle);
-        postRepository.save(post);
+
+        return new PostResponse(post.getId(), post.getTitle());
     }
 
+    @Transactional(readOnly = true)
     public List<PostResponse> searchPostsByKeyword(String keyword) {
         return postRepository.findByTitleContaining(keyword).stream()
                 .map(p -> new PostResponse(p.getId(), p.getTitle()))
