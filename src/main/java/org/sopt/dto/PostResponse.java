@@ -1,3 +1,5 @@
 package org.sopt.dto;
 
-public record PostResponse(Long id, String title) {}
+import org.sopt.domain.TagType;
+
+public record PostResponse(Long id, String title, String content, String writerNickname, TagType tag) {}
