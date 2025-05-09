@@ -1,48 +1,70 @@
 package org.sopt.controller;
 
-import org.sopt.domain.Post;
+import org.sopt.dto.PostRequest;
+import org.sopt.dto.PostResponse;
+import org.sopt.dto.PostSummaryResponse;
+import org.sopt.global.ApiResponse;
 import org.sopt.service.PostService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 
+
+@RestController
 public class PostController {
 
-    private final PostService postService = new PostService();
+    private final PostService postService;
 
-    public void createPost(final String title) {
-        try {
-            postService.createPost(title);
-            System.out.println("✅ 게시글이 성공적으로 저장되었습니다!");
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-        }
+    public PostController(PostService postService) {
+        this.postService = postService;
     }
 
-    public List<Post> getAllPosts() {
-        return postService.getAllPosts();
+    @PostMapping("/post") // userid는 헤더에서 받는다.
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(@RequestBody PostRequest request,
+                                                                @RequestHeader("userId") Long userId) {
+        PostResponse response = postService.createPost(request, userId);
+        return ResponseEntity.ok(ApiResponse.success("게시글 작성 성공", response));
     }
 
-    public Post getPostById(int id) {
-        return postService.getPostById(id);
+    @GetMapping("/posts")
+    public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getAllPosts() {
+        List<PostSummaryResponse> posts = postService.getAllPosts();
+        return ResponseEntity.ok(ApiResponse.success("전체 게시글 조회 성공", posts));
     }
 
-
-    public boolean deletePostById(int id) {
-        return postService.deletePostById(id);
+    @GetMapping("/post/{id}")
+    public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success("게시글 조회 성공", postService.getPostById(id)));
     }
 
-    public List<Post> searchPostsByKeyword(String keyword) {
-        return postService.searchPostsByKeyword(keyword);
+    @PatchMapping("/post/{id}")
+    public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id,
+                                                                @RequestBody PostRequest request,
+                                                                @RequestHeader("userId") Long userId) {
+        PostResponse updated = postService.updatePost(id, request, userId);
+        return ResponseEntity.ok(ApiResponse.success("게시글 수정 성공", updated));
     }
 
-    public Boolean updatePostTitle(int id, String newTitle) {
-        try {
-            return postService.updatePostTitle(id, newTitle);
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
+    @DeleteMapping("/post/{id}")
+    public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long id,
+                                                        @RequestHeader("userId") Long userId) {
+        postService.deletePost(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("게시글 삭제 성공"));
     }
 
+    @GetMapping("/search/title")
+    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByTitle(@RequestParam("keyword") String keyword) {
+        return ResponseEntity.ok(ApiResponse.success("제목 검색 성공", postService.searchByTitle(keyword)));
+    }
+
+    @GetMapping("/search/writer")
+    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByWriter(@RequestParam("nickname") String nickname) {
+        return ResponseEntity.ok(ApiResponse.success("작성자 검색 성공", postService.searchByWriterNickname(nickname)));
+    }
+
+    @GetMapping("/search/tag")
+    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByTag(@RequestParam("tag") String tag) {
+        return ResponseEntity.ok(ApiResponse.success("태그 검색 성공", postService.searchByTag(tag)));
+    }
 }

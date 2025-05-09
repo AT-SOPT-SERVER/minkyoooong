@@ -1,48 +1,69 @@
 package org.sopt.domain;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
+@Entity
 public class Post {
 
-    private int id;
-    private String title;
-    private final LocalDateTime createdAt;
+    @Id // id 직접 생성 x, jpa가 생성
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    // 게시물 생성시 제목 공백 -> 생성자에 검증 로직 추가
-    public Post(int id, String title) {
-        validateTitle(title);
-        this.id = id;
-        this.title = title;
-        this.createdAt = LocalDateTime.now();
+    @Column(nullable = false, length = 30, unique = true) // 제목 30자, 내용 1000자 제한
+    private String title; // 제목 중복 x, 유일성 보장을 위해 unique 조건 추가
+
+    @Column(nullable = false, length = 1000)
+    private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TagType tag; // 태그 추가 (필수)
+
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ManyToOne(fetch = FetchType.LAZY) // user - post 연관관계 맵핑
+    @JoinColumn(name = "user_id", nullable = false)
+    private User writer;
+
+    protected Post() {
     }
 
-    public int getId() {
-        return this.id;
+    public Post(String title, String content, TagType tag, User writer) {
+        this.title = title;
+        this.content = content;
+        this.tag = tag;
+        this.writer = writer;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getTitle() {
-        return this.title;
+        return title;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public TagType getTag() {
+        return tag;
     }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
-    // 제목의 유효성 -> Post 객체 자체의 책임으로 domain에서 처리
-    private void validateTitle(String title) {
-
-        if (title == null || title.trim().isEmpty()) { // title.trim().isEmpty()로 문자열이 공백만 있는지 검사
-            throw new IllegalArgumentException("제목은 비어있을 수 없습니다.");
-        }
-
-        if (title.length() > 30) {
-            throw new IllegalArgumentException("제목은 30자를 넘을 수 없습니다.");
-        }
+    public void update(String title, String content, TagType tag) { // 수정 시 null이 아닐 경우에만
+        if (title != null && !title.isBlank()) this.title = title;
+        if (content != null && !content.isBlank()) this.content = content;
+        if (tag != null) this.tag = tag; // 태그는 필수
     }
 
-    public void updateTitle(String newTitle) {
-        validateTitle(newTitle);
-        this.title = newTitle;
+    public User getWriter() {
+        return writer;
     }
-
 }

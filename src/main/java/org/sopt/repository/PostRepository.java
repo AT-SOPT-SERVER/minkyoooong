@@ -1,67 +1,31 @@
 package org.sopt.repository;
 
 import org.sopt.domain.Post;
+import org.sopt.domain.TagType;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public class PostRepository {
+@Repository
+public interface PostRepository extends JpaRepository<Post, Long> {
 
-    List<Post> postList = new ArrayList<>();
+    // spring data jpa 사용 (중복 제목 조회, 키워드 검색 쿼리)
+    boolean existsByTitle(String title);
 
-    public void save(Post post) {
-        postList.add(post);
-    }
+    @Query("SELECT p FROM Post p WHERE p.title LIKE %:title%")
+    List<Post> findPostsByTitleContaining(@Param("title") String title);
 
-    public List<Post> findAll() {
-        return postList;
-    }
+    @Query("SELECT p FROM Post p WHERE p.writer.nickname LIKE %:nickname%")
+    List<Post> findPostsByWriterNicknameContaining(@Param("nickname") String nickname);
 
-    public Post findPostById(int id) {
-        for (Post post : postList) {
-            if (post.getId() == id) {
-                return post;
-            }
-        }
+    List<Post> findByTag(TagType tag);
+    List<Post> findAllByOrderByCreatedAtDesc();
 
-        return null;
-    }
+    Optional<Post> findByTitle(String title);
+    List<Post> findAllByWriterIdOrderByCreatedAtDesc(Long writerId);
 
-    public boolean delete(int id) {
-        for (Post post : postList) {
-            if (post.getId() == id) {
-                postList.remove(post);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // 중복 검사 메서드 -> repository에 추가
-    // 데이터를 직접 다루는 책임은 Repository에 있으므로 이곳에 구현
-    public boolean existsByTitle(String title) {
-        for (Post post : postList) {
-            if (post.getTitle().equals(title)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // 가장 마지막 게시물을 가져오는 기능
-    public Post findLastPost() {
-        if (postList.isEmpty()) return null;
-        return postList.get(postList.size() - 1);
-    }
-
-    // 게시물 키워드 검색 기능 -> repository에 추가
-    public List<Post> searchByKeyword(String keyword) {
-        List<Post> result = new ArrayList<>();
-        for (Post post : postList) {
-            if (post.getTitle().contains(keyword)) {
-                result.add(post);
-            }
-        }
-        return result;
-    }
 }

@@ -1,77 +1,151 @@
 package org.sopt.service;
 
 import org.sopt.domain.Post;
+import org.sopt.domain.TagType;
+import org.sopt.domain.User;
+import org.sopt.dto.PostRequest;
+import org.sopt.dto.PostResponse;
+import org.sopt.dto.PostSummaryResponse;
+import org.sopt.global.CustomException;
+import org.sopt.global.ErrorCode;
 import org.sopt.repository.PostRepository;
-import org.sopt.utils.IdGenerator;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+@Service
 public class PostService {
 
-    private final PostRepository postRepository = new PostRepository();
+    private static final long POST_LIMIT_SECONDS = 180; // 3분 제한
 
-    public void createPost(String title) {
+    private final PostRepository postRepository;
+    private final UserService userService;
 
-        // 중복 검사 로직 추가
-        if (postRepository.existsByTitle(title)) {
-            throw new IllegalArgumentException("이미 존재하는 제목입니다.");
+    public PostService(PostRepository postRepository, UserService userService) {
+        this.postRepository = postRepository;
+        this.userService = userService;
+    }
+
+    @Transactional
+    public PostResponse createPost(PostRequest request, Long userId) {
+        if (request.title() == null || request.title().isBlank())
+            throw new CustomException(ErrorCode.INVALID_TITLE);
+        if (request.content() == null || request.content().isBlank())
+            throw new CustomException(ErrorCode.INVALID_CONTENT);
+
+        if (request.title().length() > 30)
+            throw new CustomException(ErrorCode.INVALID_TITLE);
+        if (request.content().length() > 1000)
+            throw new CustomException(ErrorCode.INVALID_CONTENT);
+
+        if (postRepository.existsByTitle(request.title())) { // 제목 중복 검사 로직 서비스 계층에 추가
+            throw new CustomException(ErrorCode.DUPLICATE_TITLE);
         }
 
-        // 게시물 작성 제한 시간 3분 -> service에 구현.
-        Post lastPost = postRepository.findLastPost();
+        List<Post> posts = postRepository.findAll();
+        List<Post> userPosts = postRepository.findAllByWriterIdOrderByCreatedAtDesc(userId);
 
-        if (lastPost != null) {
-            LocalDateTime now = LocalDateTime.now();
-            Duration duration = Duration.between(lastPost.getCreatedAt(), now);
-            if (duration.getSeconds() < 180) { // 제한 시간 3분
-                throw new IllegalArgumentException("직전 게시물 생성 기준으로 3분이 지나지 않아 게시물을 작성할 수 없습니다.");
+        // user추가 -> 쿨타임을 user별 마지막 글 작성 시간 기준으로
+        if (!userPosts.isEmpty()) {
+            Post lastPost = userPosts.get(0);
+            Duration duration = Duration.between(lastPost.getCreatedAt(), LocalDateTime.now());
+            if (duration.getSeconds() < POST_LIMIT_SECONDS) {
+                throw new CustomException(ErrorCode.POST_COOLDOWN);
             }
         }
 
-        // 유틸 클래스에서 id 값 받아오는 방식으로 수정
-        int id = IdGenerator.generateId();
-        Post post = new Post(id, title);
-        postRepository.save(post);
+        // 생성 완료 후 응답에서 생성된 post 정보를 돌려보내도록 하기 위해 response 리턴하도록
+        User user = userService.findUserById(userId);
+        Post saved = postRepository.save(new Post(request.title(), request.content(), request.tag(), user));
+        return new PostResponse(saved.getId(), saved.getTitle(), saved.getContent(), user.getNickname(), saved.getTag());
     }
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+
+    @Transactional(readOnly = true)
+    public List<PostSummaryResponse> getAllPosts() {
+        return postRepository.findAllByOrderByCreatedAtDesc().stream()
+                .map(post -> new PostSummaryResponse(post.getId(), post.getTitle(), post.getWriter().getNickname()))
+                .collect(Collectors.toList());
     }
 
-    public Post getPostById(int id) {
-        return postRepository.findPostById(id);
+    @Transactional(readOnly = true)
+    public PostResponse getPostById(Long id) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        return new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag());
     }
 
-    public boolean deletePostById(int id) {
-        return postRepository.delete(id);
+    @Transactional
+    public void deletePost(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        if (!post.getWriter().getId().equals(userId))
+            throw new CustomException(ErrorCode.NO_PERMISSION);
+        postRepository.delete(post);
     }
 
-    // 게시물 수정 -> service에서 처리.
-    // 게시물 수정은 단순히 수정 이외에 게시물을 조회하고, 예외 등등을 처리해야하므로 비즈니스 로직을 수행하는 service에서 처리.
-    public boolean updatePostTitle(int id, String newTitle) {
-        Post post = postRepository.findPostById(id);
+    @Transactional
+    public PostResponse updatePost(Long postId, PostRequest request, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
+        if (!post.getWriter().getId().equals(userId))
+            throw new CustomException(ErrorCode.NO_PERMISSION);
 
-        if (post == null) {
-            return false;
-        }
-
-        // 현재 게시글을 제외하고 중복 제목 검사
-        List<Post> allPosts = postRepository.findAll();
-        for (Post p : allPosts) {
-            if (p.getId() != id && p.getTitle().equals(newTitle)) {
-                throw new IllegalArgumentException("이미 존재하는 제목입니다.");
+        // 수정 시 제목이 변경되는 경우 중복 여부 검사
+        if (request.title() != null && !request.title().isBlank() &&
+                !post.getTitle().equals(request.title())) {
+            Optional<Post> found = postRepository.findByTitle(request.title());
+            if (found.isPresent() && !found.get().getId().equals(post.getId())) {
+                throw new CustomException(ErrorCode.DUPLICATE_TITLE);
             }
         }
 
-        post.updateTitle(newTitle);
-        return true;
+        post.update(request.title(), request.content(), request.tag());
+        return new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag());
     }
 
-    public List<Post> searchPostsByKeyword(String keyword) {
-        return postRepository.searchByKeyword(keyword);
+    @Transactional(readOnly = true)
+    public List<PostResponse> searchByTitle(String titleKeyword) {
+        List<Post> posts = postRepository.findPostsByTitleContaining(titleKeyword);
+        if (posts.isEmpty()) {
+            throw new CustomException(ErrorCode.POST_NOT_FOUND);
+        }
+        return posts.stream()
+                .map(p -> new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getWriter().getNickname(), p.getTag()))
+                .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public List<PostResponse> searchByWriterNickname(String nicknameKeyword) {
+        List<Post> posts = postRepository.findPostsByWriterNicknameContaining(nicknameKeyword);
+        if (posts.isEmpty()) {
+            throw new CustomException(ErrorCode.POST_NOT_FOUND);
+        }
+        return posts.stream()
+                .map(p -> new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getWriter().getNickname(), p.getTag()))
+                .collect(Collectors.toList());
+    }
 
+    @Transactional(readOnly = true)
+    public List<PostResponse> searchByTag(String tagValue) {
+        TagType tag;
+        try {
+            tag = TagType.valueOf(tagValue.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new CustomException(ErrorCode.INVALID_TAG);
+        }
+
+        List<Post> posts = postRepository.findByTag(tag);
+        if (posts.isEmpty()) {
+            throw new CustomException(ErrorCode.POST_NOT_FOUND);
+        }
+        return posts.stream()
+                .map(p -> new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getWriter().getNickname(), p.getTag()))
+                .collect(Collectors.toList());
+    }
 }
