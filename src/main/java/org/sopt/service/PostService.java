@@ -125,9 +125,9 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponse> search(String title, String writer, String tagValue) {
         final TagType tag;
+
         if (tagValue != null) {
-            try {
-                tag = TagType.valueOf(tagValue.toUpperCase());
+            try {tag = TagType.valueOf(tagValue.toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new CustomException(ErrorCode.INVALID_TAG);
             }
@@ -135,16 +135,11 @@ public class PostService {
             tag = null;
         }
 
-        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+        List<Post> posts = postRepository.search(title, writer, tag);
 
         return posts.stream()
-                .filter(post -> {
-                    if (title != null && !post.getTitle().contains(title)) return false;
-                    if (writer != null && !post.getWriter().getNickname().contains(writer)) return false;
-                    if (tag != null && !post.getTag().equals(tag)) return false;
-                    return true;
-                })
-                .map(post -> new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag(),List.of())) // 검색결과에서는 댓글 포함 x
+                .map(post -> new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag(), List.of() // 검색 결과에는 댓글 생략
+                ))
                 .collect(Collectors.toList());
     }
 }
