@@ -9,8 +9,12 @@ import org.sopt.dto.PostResponse;
 import org.sopt.dto.PostSummaryResponse;
 import org.sopt.global.CustomException;
 import org.sopt.global.ErrorCode;
+import org.sopt.global.PageResponse;
 import org.sopt.repository.CommentRepository;
 import org.sopt.repository.PostRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,10 +66,20 @@ public class PostService {
 
 
     @Transactional(readOnly = true)
-    public List<PostSummaryResponse> getAllPosts() {
-        return postRepository.findAllByOrderByCreatedAtDesc().stream()
+    public PageResponse<List<PostSummaryResponse>> getAllPosts(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Post> postPage = postRepository.findAll(pageable);
+
+        List<PostSummaryResponse> result = postPage.getContent().stream()
                 .map(post -> new PostSummaryResponse(post.getId(), post.getTitle(), post.getWriter().getNickname()))
                 .collect(Collectors.toList());
+
+        return new PageResponse<>(
+                postPage.getNumber(),
+                postPage.hasNext(),
+                postPage.getTotalPages(),
+                result
+        );
     }
 
     @Transactional(readOnly = true)

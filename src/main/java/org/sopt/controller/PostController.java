@@ -5,6 +5,7 @@ import org.sopt.dto.PostRequest;
 import org.sopt.dto.PostResponse;
 import org.sopt.dto.PostSummaryResponse;
 import org.sopt.global.ApiResponse;
+import org.sopt.global.PageResponse;
 import org.sopt.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,9 +32,12 @@ public class PostController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getAllPosts() {
-        List<PostSummaryResponse> posts = postService.getAllPosts();
-        return ResponseEntity.ok(ApiResponse.success("전체 게시글 조회 성공", posts));
+    public ResponseEntity<ApiResponse<PageResponse<List<PostSummaryResponse>>>> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size // 10개 단위로
+    ) {
+        PageResponse<List<PostSummaryResponse>> response = postService.getAllPosts(page, size);
+        return ResponseEntity.ok(ApiResponse.success("전체 게시글 조회 성공", response));
     }
 
     @GetMapping("/{id}")
