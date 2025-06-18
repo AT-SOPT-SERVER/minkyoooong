@@ -3,11 +3,13 @@ package org.sopt.service;
 import org.sopt.domain.Post;
 import org.sopt.domain.TagType;
 import org.sopt.domain.User;
+import org.sopt.dto.CommentResponse;
 import org.sopt.dto.PostRequest;
 import org.sopt.dto.PostResponse;
 import org.sopt.dto.PostSummaryResponse;
 import org.sopt.global.CustomException;
 import org.sopt.global.ErrorCode;
+import org.sopt.repository.CommentRepository;
 import org.sopt.repository.PostRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,10 +27,12 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserService userService;
+    private final CommentRepository commentRepository;
 
-    public PostService(PostRepository postRepository, UserService userService) {
+    public PostService(PostRepository postRepository, UserService userService, CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.userService = userService;
+        this.commentRepository = commentRepository;
     }
 
     @Transactional
@@ -53,7 +57,7 @@ public class PostService {
         // 생성 완료 후 응답에서 생성된 post 정보를 돌려보내도록 하기 위해 response 리턴하도록
         User user = userService.findUserById(userId);
         Post saved = postRepository.save(new Post(request.title(), request.content(), request.tag(), user));
-        return new PostResponse(saved.getId(), saved.getTitle(), saved.getContent(), user.getNickname(), saved.getTag());
+        return new PostResponse(saved.getId(), saved.getTitle(), saved.getContent(), user.getNickname(), saved.getTag(), List.of()) ;
     }
 
 
@@ -68,7 +72,12 @@ public class PostService {
     public PostResponse getPostById(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
-        return new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag());
+
+        List<CommentResponse> comments = commentRepository.findByPost(post).stream()
+                .map(c -> new CommentResponse(c.getId(), c.getContent(), c.getWriter().getNickname()))
+                .collect(Collectors.toList());
+
+        return new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag(), comments);
     }
 
     @Transactional
@@ -96,7 +105,7 @@ public class PostService {
         }
 
         post.update(request.title(), request.content(), request.tag());
-        return new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag());
+        return new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag(), List.of());
     }
 
     @Transactional(readOnly = true)
@@ -121,8 +130,7 @@ public class PostService {
                     if (tag != null && !post.getTag().equals(tag)) return false;
                     return true;
                 })
-                .map(post -> new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag()
-                ))
+                .map(post -> new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag(),List.of())) // 검색결과에서는 댓글 포함 x
                 .collect(Collectors.toList());
     }
 }
