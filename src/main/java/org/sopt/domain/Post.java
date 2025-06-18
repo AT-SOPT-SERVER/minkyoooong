@@ -1,11 +1,12 @@
 package org.sopt.domain;
 
 import jakarta.persistence.*;
+import org.sopt.global.BaseEntity;
 
 import java.time.LocalDateTime;
 
 @Entity
-public class Post {
+public class Post extends BaseEntity {
 
     @Id // id 직접 생성 x, jpa가 생성
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,8 +21,6 @@ public class Post {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TagType tag; // 태그 추가 (필수)
-
-    private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY) // user - post 연관관계 맵핑
     @JoinColumn(name = "user_id", nullable = false)
@@ -53,9 +52,6 @@ public class Post {
         return tag;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 
     public void update(String title, String content, TagType tag) { // 수정 시 null이 아닐 경우에만
         if (title != null && !title.isBlank()) this.title = title;

@@ -13,6 +13,7 @@ import java.util.List;
 
 
 @RestController
+@RequestMapping("/posts")
 public class PostController {
 
     private final PostService postService;
@@ -21,7 +22,7 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping("/post")
+    @PostMapping
     public ResponseEntity<ApiResponse<PostResponse>> createPost(
             @Valid @RequestBody PostRequest request,
             @RequestHeader("userId") Long userId) {
@@ -29,18 +30,18 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.success("게시글 작성 성공", response));
     }
 
-    @GetMapping("/posts")
+    @GetMapping
     public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getAllPosts() {
         List<PostSummaryResponse> posts = postService.getAllPosts();
         return ResponseEntity.ok(ApiResponse.success("전체 게시글 조회 성공", posts));
     }
 
-    @GetMapping("/post/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("게시글 조회 성공", postService.getPostById(id)));
     }
 
-    @PatchMapping("/post/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id,
                                                                 @Valid @RequestBody PostRequest request,
                                                                 @RequestHeader("userId") Long userId) {
@@ -48,26 +49,24 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.success("게시글 수정 성공", updated));
     }
 
-    @DeleteMapping("/post/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long id,
                                                         @RequestHeader("userId") Long userId) {
         postService.deletePost(id, userId);
         return ResponseEntity.ok(ApiResponse.success("게시글 삭제 성공"));
     }
 
-    @GetMapping("/search/title")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByTitle(@RequestParam("keyword") String keyword) {
-        return ResponseEntity.ok(ApiResponse.success("제목 검색 성공", postService.searchByTitle(keyword)));
-    }
-
-    @GetMapping("/search/writer")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByWriter(@RequestParam("nickname") String nickname) {
-        return ResponseEntity.ok(ApiResponse.success("작성자 검색 성공", postService.searchByWriterNickname(nickname)));
-    }
-
-    @GetMapping("/search/tag")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByTag(@RequestParam("tag") String tag) {
-        return ResponseEntity.ok(ApiResponse.success("태그 검색 성공", postService.searchByTag(tag)));
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<PostResponse>>> search(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String writer,
+            @RequestParam(required = false) String tag
+    ) {
+        if (title != null || writer != null || tag != null) {
+            return ResponseEntity.ok(ApiResponse.success("검색 성공", postService.search(title, writer, tag)));
+        } else {
+            return ResponseEntity.badRequest().body(ApiResponse.fail("검색 조건을 하나 이상 입력해주세요."));
+        }
     }
 
 }

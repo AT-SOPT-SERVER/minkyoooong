@@ -100,42 +100,29 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponse> searchByTitle(String titleKeyword) {
-        List<Post> posts = postRepository.findPostsByTitleContaining(titleKeyword);
-        if (posts.isEmpty()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
-        return posts.stream()
-                .map(p -> new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getWriter().getNickname(), p.getTag()))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<PostResponse> searchByWriterNickname(String nicknameKeyword) {
-        List<Post> posts = postRepository.findPostsByWriterNicknameContaining(nicknameKeyword);
-        if (posts.isEmpty()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
-        return posts.stream()
-                .map(p -> new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getWriter().getNickname(), p.getTag()))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<PostResponse> searchByTag(String tagValue) {
-        TagType tag;
-        try {
-            tag = TagType.valueOf(tagValue.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.INVALID_TAG);
+    public List<PostResponse> search(String title, String writer, String tagValue) {
+        final TagType tag;
+        if (tagValue != null) {
+            try {
+                tag = TagType.valueOf(tagValue.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new CustomException(ErrorCode.INVALID_TAG);
+            }
+        } else {
+            tag = null;
         }
 
-        List<Post> posts = postRepository.findByTag(tag);
-        if (posts.isEmpty()) {
-            throw new CustomException(ErrorCode.POST_NOT_FOUND);
-        }
+        List<Post> posts = postRepository.findAllByOrderByCreatedAtDesc();
+
         return posts.stream()
-                .map(p -> new PostResponse(p.getId(), p.getTitle(), p.getContent(), p.getWriter().getNickname(), p.getTag()))
+                .filter(post -> {
+                    if (title != null && !post.getTitle().contains(title)) return false;
+                    if (writer != null && !post.getWriter().getNickname().contains(writer)) return false;
+                    if (tag != null && !post.getTag().equals(tag)) return false;
+                    return true;
+                })
+                .map(post -> new PostResponse(post.getId(), post.getTitle(), post.getContent(), post.getWriter().getNickname(), post.getTag()
+                ))
                 .collect(Collectors.toList());
     }
 }
