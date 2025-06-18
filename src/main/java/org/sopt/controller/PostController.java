@@ -67,4 +67,5 @@ public class PostController {
     public ResponseEntity<ApiResponse<List<PostResponse>>> searchByTag(@RequestParam("tag") String tag) {
         return ResponseEntity.ok(ApiResponse.success("태그 검색 성공", postService.searchByTag(tag)));
     }
+
 }
