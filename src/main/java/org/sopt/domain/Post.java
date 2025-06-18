@@ -1,9 +1,7 @@
 package org.sopt.domain;
 
 import jakarta.persistence.*;
-import org.sopt.global.BaseEntity;
-
-import java.time.LocalDateTime;
+import org.sopt.global.entity.BaseEntity;
 
 @Entity
 public class Post extends BaseEntity {

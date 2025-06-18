@@ -1,10 +1,10 @@
 package org.sopt.service;
 
 import org.sopt.domain.User;
-import org.sopt.dto.UserRequest;
-import org.sopt.dto.UserResponse;
-import org.sopt.global.CustomException;
-import org.sopt.global.ErrorCode;
+import org.sopt.dto.request.UserRequest;
+import org.sopt.dto.response.UserResponse;
+import org.sopt.global.exception.CustomException;
+import org.sopt.global.exception.ErrorCode;
 import org.sopt.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

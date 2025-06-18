@@ -1,6 +1,6 @@
 package org.sopt.controller;
 
-import org.sopt.global.ApiResponse;
+import org.sopt.global.response.ApiResponse;
 import org.sopt.service.LikeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package org.sopt.dto;
+package org.sopt.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

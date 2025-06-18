@@ -1,7 +1,7 @@
 package org.sopt.domain;
 
 import jakarta.persistence.*;
-import org.sopt.global.BaseEntity;
+import org.sopt.global.entity.BaseEntity;
 
 @Entity
 @Table(name = "likes", uniqueConstraints = {  // 조합을 unique로 -> 중복 막기

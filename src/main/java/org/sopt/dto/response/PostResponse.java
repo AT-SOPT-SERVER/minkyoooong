@@ -1,4 +1,4 @@
-package org.sopt.dto;
+package org.sopt.dto.response;
 
 import org.sopt.domain.TagType;
 

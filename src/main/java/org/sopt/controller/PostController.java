@@ -1,11 +1,11 @@
 package org.sopt.controller;
 
 import jakarta.validation.Valid;
-import org.sopt.dto.PostRequest;
-import org.sopt.dto.PostResponse;
-import org.sopt.dto.PostSummaryResponse;
-import org.sopt.global.ApiResponse;
-import org.sopt.global.PageResponse;
+import org.sopt.dto.request.PostRequest;
+import org.sopt.dto.response.PostResponse;
+import org.sopt.dto.response.PostSummaryResponse;
+import org.sopt.global.response.ApiResponse;
+import org.sopt.global.response.PageResponse;
 import org.sopt.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

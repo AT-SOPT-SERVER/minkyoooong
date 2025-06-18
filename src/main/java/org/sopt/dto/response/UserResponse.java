@@ -1,3 +1,3 @@
-package org.sopt.dto;
+package org.sopt.dto.response;
 
 public record UserResponse(Long id, String nickname) {}

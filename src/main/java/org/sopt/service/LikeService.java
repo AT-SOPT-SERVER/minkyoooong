@@ -1,8 +1,8 @@
 package org.sopt.service;
 
 import org.sopt.domain.*;
-import org.sopt.global.CustomException;
-import org.sopt.global.ErrorCode;
+import org.sopt.global.exception.CustomException;
+import org.sopt.global.exception.ErrorCode;
 import org.sopt.repository.CommentRepository;
 import org.sopt.repository.LikeRepository;
 import org.sopt.repository.PostRepository;

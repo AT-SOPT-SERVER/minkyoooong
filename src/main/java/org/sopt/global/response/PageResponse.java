@@ -1,4 +1,4 @@
-package org.sopt.global;
+package org.sopt.global.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

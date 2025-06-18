@@ -1,4 +1,4 @@
-package org.sopt.global;
+package org.sopt.global.response;
 
 public record ApiResponse<T>(
         boolean success,

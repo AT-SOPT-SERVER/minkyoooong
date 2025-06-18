@@ -3,13 +3,13 @@ package org.sopt.service;
 import org.sopt.domain.Post;
 import org.sopt.domain.TagType;
 import org.sopt.domain.User;
-import org.sopt.dto.CommentResponse;
-import org.sopt.dto.PostRequest;
-import org.sopt.dto.PostResponse;
-import org.sopt.dto.PostSummaryResponse;
-import org.sopt.global.CustomException;
-import org.sopt.global.ErrorCode;
-import org.sopt.global.PageResponse;
+import org.sopt.dto.response.CommentResponse;
+import org.sopt.dto.request.PostRequest;
+import org.sopt.dto.response.PostResponse;
+import org.sopt.dto.response.PostSummaryResponse;
+import org.sopt.global.exception.CustomException;
+import org.sopt.global.exception.ErrorCode;
+import org.sopt.global.response.PageResponse;
 import org.sopt.repository.CommentRepository;
 import org.sopt.repository.PostRepository;
 import org.springframework.data.domain.Page;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Service
 public class PostService {
 
-    private static final long POST_LIMIT_SECONDS = 180; // 3분 제한
+    private static final long POST_LIMIT_SECONDS = 1; // 3분 제한
 
     private final PostRepository postRepository;
     private final UserService userService;

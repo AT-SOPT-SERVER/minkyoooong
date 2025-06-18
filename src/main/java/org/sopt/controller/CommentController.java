@@ -1,9 +1,9 @@
 package org.sopt.controller;
 
 import jakarta.validation.Valid;
-import org.sopt.dto.CommentRequest;
-import org.sopt.dto.CommentResponse;
-import org.sopt.global.ApiResponse;
+import org.sopt.dto.request.CommentRequest;
+import org.sopt.dto.response.CommentResponse;
+import org.sopt.global.response.ApiResponse;
 import org.sopt.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

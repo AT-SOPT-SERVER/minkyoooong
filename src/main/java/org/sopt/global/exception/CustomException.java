@@ -1,4 +1,4 @@
-package org.sopt.global;
+package org.sopt.global.exception;
 
 public class CustomException extends RuntimeException {
     private final ErrorCode errorCode;
