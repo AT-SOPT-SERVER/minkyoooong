@@ -1,8 +1,9 @@
 package org.sopt.controller;
 
-import org.sopt.dto.UserRequest;
-import org.sopt.dto.UserResponse;
-import org.sopt.global.ApiResponse;
+import jakarta.validation.Valid;
+import org.sopt.dto.request.UserRequest;
+import org.sopt.dto.response.UserResponse;
+import org.sopt.global.response.ApiResponse;
 import org.sopt.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,8 +21,8 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> registerUser(@RequestBody UserRequest request) {
+    @PostMapping
+    public ResponseEntity<ApiResponse<UserResponse>> registerUser(@Valid @RequestBody UserRequest request) {
         UserResponse response = userService.register(request);
         return ResponseEntity.ok(ApiResponse.success("회원가입 성공", response));
     }

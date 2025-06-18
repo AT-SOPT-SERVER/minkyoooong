@@ -1,9 +1,10 @@
 package org.sopt.domain;
 
 import jakarta.persistence.*;
+import org.sopt.global.entity.BaseEntity;
 
 @Entity
-public class User {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

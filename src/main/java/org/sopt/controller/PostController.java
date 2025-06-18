@@ -1,9 +1,11 @@
 package org.sopt.controller;
 
-import org.sopt.dto.PostRequest;
-import org.sopt.dto.PostResponse;
-import org.sopt.dto.PostSummaryResponse;
-import org.sopt.global.ApiResponse;
+import jakarta.validation.Valid;
+import org.sopt.dto.request.PostRequest;
+import org.sopt.dto.response.PostResponse;
+import org.sopt.dto.response.PostSummaryResponse;
+import org.sopt.global.response.ApiResponse;
+import org.sopt.global.response.PageResponse;
 import org.sopt.service.PostService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,7 @@ import java.util.List;
 
 
 @RestController
+@RequestMapping("/posts")
 public class PostController {
 
     private final PostService postService;
@@ -20,52 +23,54 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping("/post") // userid는 헤더에서 받는다.
-    public ResponseEntity<ApiResponse<PostResponse>> createPost(@RequestBody PostRequest request,
-                                                                @RequestHeader("userId") Long userId) {
+    @PostMapping
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(
+            @Valid @RequestBody PostRequest request,
+            @RequestHeader("userId") Long userId) {
         PostResponse response = postService.createPost(request, userId);
         return ResponseEntity.ok(ApiResponse.success("게시글 작성 성공", response));
     }
 
-    @GetMapping("/posts")
-    public ResponseEntity<ApiResponse<List<PostSummaryResponse>>> getAllPosts() {
-        List<PostSummaryResponse> posts = postService.getAllPosts();
-        return ResponseEntity.ok(ApiResponse.success("전체 게시글 조회 성공", posts));
+    @GetMapping
+    public ResponseEntity<ApiResponse<PageResponse<List<PostSummaryResponse>>>> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size // 10개 단위로
+    ) {
+        PageResponse<List<PostSummaryResponse>> response = postService.getAllPosts(page, size);
+        return ResponseEntity.ok(ApiResponse.success("전체 게시글 조회 성공", response));
     }
 
-    @GetMapping("/post/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PostResponse>> getPostById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("게시글 조회 성공", postService.getPostById(id)));
     }
 
-    @PatchMapping("/post/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id,
-                                                                @RequestBody PostRequest request,
+                                                                @Valid @RequestBody PostRequest request,
                                                                 @RequestHeader("userId") Long userId) {
         PostResponse updated = postService.updatePost(id, request, userId);
         return ResponseEntity.ok(ApiResponse.success("게시글 수정 성공", updated));
     }
 
-    @DeleteMapping("/post/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long id,
                                                         @RequestHeader("userId") Long userId) {
         postService.deletePost(id, userId);
         return ResponseEntity.ok(ApiResponse.success("게시글 삭제 성공"));
     }
 
-    @GetMapping("/search/title")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByTitle(@RequestParam("keyword") String keyword) {
-        return ResponseEntity.ok(ApiResponse.success("제목 검색 성공", postService.searchByTitle(keyword)));
-    }
-
-    @GetMapping("/search/writer")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByWriter(@RequestParam("nickname") String nickname) {
-        return ResponseEntity.ok(ApiResponse.success("작성자 검색 성공", postService.searchByWriterNickname(nickname)));
-    }
-
-    @GetMapping("/search/tag")
-    public ResponseEntity<ApiResponse<List<PostResponse>>> searchByTag(@RequestParam("tag") String tag) {
-        return ResponseEntity.ok(ApiResponse.success("태그 검색 성공", postService.searchByTag(tag)));
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<PostResponse>>> search(
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String writer,
+            @RequestParam(required = false) String tag
+    ) {
+        if (title != null || writer != null || tag != null) {
+            return ResponseEntity.ok(ApiResponse.success("검색 성공", postService.search(title, writer, tag)));
+        } else {
+            return ResponseEntity.badRequest().body(ApiResponse.fail("검색 조건을 하나 이상 입력해주세요."));
+        }
     }
 
 }

@@ -1,4 +1,4 @@
-package org.sopt.global;
+package org.sopt.global.exception;
 
 import org.springframework.http.HttpStatus;
 
@@ -15,7 +15,9 @@ public enum ErrorCode {
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, 403, "존재하지 않는 사용자입니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, 409, "이미 존재하는 닉네임입니다."),
-    INVALID_NICKNAME(HttpStatus.BAD_REQUEST, 400, "닉네임은 비어있을 수 없고 10자를 넘을 수 없습니다.");
+    INVALID_NICKNAME(HttpStatus.BAD_REQUEST, 400, "닉네임은 비어있을 수 없고 10자를 넘을 수 없습니다."),
+
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, 404, "댓글을 찾을 수 없습니다.");
 
     private final HttpStatus status;
     private final String message;
