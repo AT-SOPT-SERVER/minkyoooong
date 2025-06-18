@@ -20,12 +20,7 @@ public class UserService {
 
     @Transactional
     public UserResponse register(UserRequest request) {
-        if (request.nickname() == null || request.nickname().trim().isEmpty()) {
-            throw new CustomException(ErrorCode.INVALID_NICKNAME);
-        }
-        if (request.nickname().length() > 10) {
-            throw new CustomException(ErrorCode.INVALID_NICKNAME);
-        }
+
         if (userRepository.existsByNickname(request.nickname())) {
             throw new CustomException(ErrorCode.DUPLICATE_NICKNAME);
         }

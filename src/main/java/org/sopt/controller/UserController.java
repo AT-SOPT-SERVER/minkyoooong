@@ -1,5 +1,6 @@
 package org.sopt.controller;
 
+import jakarta.validation.Valid;
 import org.sopt.dto.UserRequest;
 import org.sopt.dto.UserResponse;
 import org.sopt.global.ApiResponse;
@@ -21,7 +22,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> registerUser(@RequestBody UserRequest request) {
+    public ResponseEntity<ApiResponse<UserResponse>> registerUser(@Valid @RequestBody UserRequest request) {
         UserResponse response = userService.register(request);
         return ResponseEntity.ok(ApiResponse.success("회원가입 성공", response));
     }

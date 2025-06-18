@@ -1,5 +1,6 @@
 package org.sopt.controller;
 
+import jakarta.validation.Valid;
 import org.sopt.dto.PostRequest;
 import org.sopt.dto.PostResponse;
 import org.sopt.dto.PostSummaryResponse;
@@ -20,9 +21,10 @@ public class PostController {
         this.postService = postService;
     }
 
-    @PostMapping("/post") // userid는 헤더에서 받는다.
-    public ResponseEntity<ApiResponse<PostResponse>> createPost(@RequestBody PostRequest request,
-                                                                @RequestHeader("userId") Long userId) {
+    @PostMapping("/post")
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(
+            @Valid @RequestBody PostRequest request,
+            @RequestHeader("userId") Long userId) {
         PostResponse response = postService.createPost(request, userId);
         return ResponseEntity.ok(ApiResponse.success("게시글 작성 성공", response));
     }
@@ -40,7 +42,7 @@ public class PostController {
 
     @PatchMapping("/post/{id}")
     public ResponseEntity<ApiResponse<PostResponse>> updatePost(@PathVariable Long id,
-                                                                @RequestBody PostRequest request,
+                                                                @Valid @RequestBody PostRequest request,
                                                                 @RequestHeader("userId") Long userId) {
         PostResponse updated = postService.updatePost(id, request, userId);
         return ResponseEntity.ok(ApiResponse.success("게시글 수정 성공", updated));

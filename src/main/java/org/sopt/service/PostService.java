@@ -33,27 +33,18 @@ public class PostService {
 
     @Transactional
     public PostResponse createPost(PostRequest request, Long userId) {
-        if (request.title() == null || request.title().isBlank())
-            throw new CustomException(ErrorCode.INVALID_TITLE);
-        if (request.content() == null || request.content().isBlank())
-            throw new CustomException(ErrorCode.INVALID_CONTENT);
 
-        if (request.title().length() > 30)
-            throw new CustomException(ErrorCode.INVALID_TITLE);
-        if (request.content().length() > 1000)
-            throw new CustomException(ErrorCode.INVALID_CONTENT);
-
-        if (postRepository.existsByTitle(request.title())) { // 제목 중복 검사 로직 서비스 계층에 추가
+        if (postRepository.existsByTitle(request.title())) {
             throw new CustomException(ErrorCode.DUPLICATE_TITLE);
         }
 
-        List<Post> posts = postRepository.findAll();
         List<Post> userPosts = postRepository.findAllByWriterIdOrderByCreatedAtDesc(userId);
 
-        // user추가 -> 쿨타임을 user별 마지막 글 작성 시간 기준으로
+        // user 추가 -> 쿨타임을 user별 마지막 글 작성 시간 기준으로
         if (!userPosts.isEmpty()) {
             Post lastPost = userPosts.get(0);
             Duration duration = Duration.between(lastPost.getCreatedAt(), LocalDateTime.now());
+
             if (duration.getSeconds() < POST_LIMIT_SECONDS) {
                 throw new CustomException(ErrorCode.POST_COOLDOWN);
             }
@@ -96,9 +87,8 @@ public class PostService {
         if (!post.getWriter().getId().equals(userId))
             throw new CustomException(ErrorCode.NO_PERMISSION);
 
-        // 수정 시 제목이 변경되는 경우 중복 여부 검사
-        if (request.title() != null && !request.title().isBlank() &&
-                !post.getTitle().equals(request.title())) {
+        // 제목이 변경된 경우에만 중복 검사
+        if (!post.getTitle().equals(request.title())) {
             Optional<Post> found = postRepository.findByTitle(request.title());
             if (found.isPresent() && !found.get().getId().equals(post.getId())) {
                 throw new CustomException(ErrorCode.DUPLICATE_TITLE);

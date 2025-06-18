@@ -13,7 +13,8 @@ public record ApiResponse<T>(
         return new ApiResponse<>(true, message, null);
     }
 
-    public static ApiResponse<Void> fail(String message) {
+    public static <T> ApiResponse<T> fail(String message) {
         return new ApiResponse<>(false, message, null);
     }
+
 }
